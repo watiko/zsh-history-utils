@@ -101,10 +101,11 @@ pub fn unmetafy(str: &[u8]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
     use rstest_reuse::{self, *};
-
-    use super::*;
 
     fn from_string(str: &str) -> Vec<u8> {
         str.to_string().into_bytes()

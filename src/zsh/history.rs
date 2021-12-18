@@ -1,3 +1,5 @@
+use std::io::{BufRead, BufReader, Read};
+
 use eyre::{eyre, Result};
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take, take_until, take_while};
@@ -120,12 +122,54 @@ impl HistoryEntry {
     }
 }
 
+#[derive(Debug)]
+pub struct HistoryLines<R> {
+    buf: BufReader<R>,
+}
+
+impl<R: Read> HistoryLines<R> {
+    pub fn new(inner: R) -> HistoryLines<R> {
+        Self {
+            buf: BufReader::new(inner),
+        }
+    }
+}
+
+impl<R: Read> Iterator for HistoryLines<R> {
+    type Item = Result<Vec<u8>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut buf = vec![];
+
+        loop {
+            let read_bytes = match self.buf.read_until(b'\n', &mut buf) {
+                Ok(v) => v,
+                Err(err) => return Some(Err(eyre!("iteration interrupted: {:?}", err))),
+            };
+            if read_bytes == 0 {
+                if buf.is_empty() {
+                    return None;
+                }
+                break;
+            }
+
+            let more = buf.ends_with(&[b'\\', b'\n']);
+            if !more {
+                break;
+            }
+        }
+
+        Some(Ok(buf))
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
     use rstest_reuse::{self, *};
-
-    use super::*;
 
     #[derive(Debug)]
     enum Line {
@@ -209,5 +253,60 @@ mod tests {
     fn test_line_to_entry(_name: &str, entry: HistoryEntry, line: Line) {
         let parsed_entry = HistoryEntry::parse(&line.into_bytes()).unwrap();
         assert_eq!(parsed_entry, entry);
+    }
+
+    #[rstest(
+      _name, histories, lines,
+      case(
+        "simple",
+        vec![
+          ": 1639324265:0;echo 1 2 3",
+          ": 1639324275:0;echo \"\"",
+          ": 1639324281:0;echo {1,2,3}",
+          "",
+        ].join("\n"),
+        vec![
+          Line::Plain(": 1639324265:0;echo 1 2 3\n".to_string()),
+          Line::Plain(": 1639324275:0;echo \"\"\n".to_string()),
+          Line::Plain(": 1639324281:0;echo {1,2,3}\n".to_string()),
+        ],
+      ),
+      case(
+        "simple",
+        vec![
+          ": 1639320933:0;echo one \\ ",
+          ": 1639322528:0;echo two \\\\ ",
+          ": 1639320933:0;echo one \\",
+          ": 1639322528:0;echo two \\\\ ",
+          ": 1639322832:0;echo 2 \\\\",
+          " 2 \\\\",
+          " 1 \\ ",
+          ": 1639322528:0;echo",
+          "",
+        ].join("\n"),
+        vec![
+          Line::Plain(": 1639320933:0;echo one \\ \n".to_string()),
+          Line::Plain(": 1639322528:0;echo two \\\\ \n".to_string()),
+          Line::Plain(": 1639320933:0;echo one \\\n: 1639322528:0;echo two \\\\ \n".to_string()),
+          Line::Plain(": 1639322832:0;echo 2 \\\\\n 2 \\\\\n 1 \\ \n".to_string()),
+          Line::Plain(": 1639322528:0;echo\n".to_string()),
+        ],
+      ),
+      ::trace
+    )]
+    fn test_history_lines(_name: &str, histories: String, lines: Vec<Line>) {
+        let iterated_lines = HistoryLines::new(histories.as_bytes())
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .into_iter()
+            .map(|line| std::str::from_utf8(&line).unwrap().to_string())
+            .collect::<Vec<_>>();
+        let lines = lines
+            .into_iter()
+            .map(|line| line.into_bytes())
+            .map(|line| std::str::from_utf8(&line).unwrap().to_string())
+            .collect::<Vec<_>>();
+
+        assert_eq!(iterated_lines, lines);
     }
 }
