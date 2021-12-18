@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+eyre = "0.6.5"
+nom = "7.1.0"
 
 [dev-dependencies]
 rstest = "0.12.0"
