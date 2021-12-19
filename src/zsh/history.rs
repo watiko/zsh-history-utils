@@ -8,10 +8,11 @@ use nom::character::is_digit;
 use nom::combinator::{map, map_res};
 use nom::multi::{many0, many1};
 use nom::sequence::{preceded, terminated, tuple};
+use serde::{Deserialize, Serialize};
 
 use super::core::{metafy, unmetafy};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HistoryEntry {
     start_time: u64,
     finish_time: u64,
