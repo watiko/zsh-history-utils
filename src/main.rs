@@ -1,8 +1,11 @@
+#[cfg(test)]
+use rstest_reuse;
+
 use eyre::Result;
 
 mod cli;
 mod command;
-mod zsh;
+pub mod zsh;
 
 use crate::cli::{Args, Commands, Parser};
 
