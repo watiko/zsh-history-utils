@@ -1,12 +1,10 @@
 use std::io::{BufRead, BufReader, Read};
 
 use eyre::{eyre, Result};
-use nom::branch::alt;
 use nom::bytes::complete::{tag, take, take_until, take_while};
-use nom::character::complete::char;
 use nom::character::is_digit;
-use nom::combinator::{map, map_res};
-use nom::multi::{many0, many1};
+use nom::combinator::map_res;
+use nom::multi::many0;
 use nom::sequence::{preceded, terminated, tuple};
 use serde::{Deserialize, Serialize};
 
@@ -19,36 +17,35 @@ pub struct HistoryEntry {
     pub command: String,
 }
 
+fn has_slash_with_space(input: &[u8]) -> bool {
+    let mut has_space = false;
+    let mut iter = input.iter().rev();
+    // skip last \n
+    if iter.next() != Some(&b'\n') {
+        return false;
+    }
+    for &c in iter {
+        match c {
+            b' ' => has_space = true,
+            b'\\' => return has_space,
+            _ => return false,
+        };
+    }
+
+    false
+}
+
 fn parse_command_lines(input: &[u8]) -> nom::IResult<&[u8], Vec<u8>> {
     fn command_line(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
         terminated(take_until(&b"\\\n"[..]), take(2usize))(input)
     }
 
-    fn last_command_line(input: &[u8]) -> nom::IResult<&[u8], Vec<u8>> {
-        let end_backslashed_line = map(
-            tuple((
-                take_until(&b"\\"[..]),
-                char('\\'),
-                many1(char(' ')),
-                char('\n'),
-            )),
-            |(base, _backslash, spaces, _lf)| {
-                let mut buf = vec![];
-                let spaces: Vec<_> = spaces.iter().map(|&c| c as u8).collect();
+    fn last_command_line(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
+        if has_slash_with_space(input) {
+            return terminated(take(input.len() - 2), tag(&b" \n"[..]))(input);
+        }
 
-                buf.extend_from_slice(base);
-                buf.push(b'\\');
-                buf.extend_from_slice(&spaces[1..]);
-                buf
-            },
-        );
-
-        let normal_line = map(
-            terminated(take_until(&b"\n"[..]), char('\n')),
-            |slice: &[u8]| slice.to_vec(),
-        );
-
-        alt((end_backslashed_line, normal_line))(input)
+        terminated(take_until(&b"\n"[..]), tag(b"\n"))(input)
     }
 
     let (input, (lines, line)) = tuple((many0(command_line), last_command_line))(input)?;
@@ -58,7 +55,7 @@ fn parse_command_lines(input: &[u8]) -> nom::IResult<&[u8], Vec<u8>> {
         buf.extend_from_slice(line);
         buf.push(b'\n');
     }
-    buf.extend_from_slice(&line);
+    buf.extend_from_slice(line);
 
     Ok((input, buf))
 }
@@ -207,6 +204,15 @@ mod tests {
           finish_time: 1639320935,
         },
         Line::Plain(": 1639320933:2;sleep 2\n".to_string()),
+      ),
+      case(
+        "simple3",
+        HistoryEntry {
+          command: "echo \\".to_string(),
+          start_time: 1639322528,
+          finish_time: 1639322528,
+        },
+        Line::Plain(": 1639322528:0;echo \\ \n".to_string()),
       ),
       case(
         "multi line entry",
