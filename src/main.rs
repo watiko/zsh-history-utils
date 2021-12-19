@@ -1,6 +1,8 @@
 use eyre::Result;
 
 mod cli;
+mod command;
+mod zsh;
 
 use crate::cli::{Args, Commands, Parser};
 
@@ -9,16 +11,13 @@ fn main() -> Result<()> {
 
     match &args.command {
         Commands::Decode { path } => {
-            println!("{}", path.to_str().unwrap());
+            command::decode::run(path)?;
         }
         Commands::Encode { path } => {
-            println!("{}", path.to_str().unwrap())
+            command::encode::run(path)?;
         }
         Commands::Merge { path } => {
-            let paths = path.iter().map(|p| p.to_str().unwrap()).collect::<Vec<_>>();
-            for path in paths {
-                println!("{}", path);
-            }
+            command::merge::run(path)?;
         }
     }
 
