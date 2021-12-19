@@ -14,9 +14,9 @@ use super::core::{metafy, unmetafy};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HistoryEntry {
-    start_time: u64,
-    finish_time: u64,
-    command: String,
+    pub start_time: u64,
+    pub finish_time: u64,
+    pub command: String,
 }
 
 fn parse_command_lines(input: &[u8]) -> nom::IResult<&[u8], Vec<u8>> {
