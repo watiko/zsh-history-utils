@@ -1,6 +1,6 @@
 use eyre::Result;
 use std::collections::BTreeMap;
-use std::io::{self, Write};
+use std::io::{self, BufWriter, Write};
 use std::path::PathBuf;
 
 use crate::zsh::history::{HistoryEntry, HistoryLines};
@@ -21,9 +21,10 @@ pub fn run(paths: &[PathBuf]) -> Result<()> {
         }
     }
 
+    let mut stdout = BufWriter::new(io::stdout());
     for entries in entries_map.values() {
         for entry in entries {
-            io::stdout().write_all(&entry.to_bytes())?;
+            stdout.write_all(&entry.to_bytes())?;
         }
     }
 
