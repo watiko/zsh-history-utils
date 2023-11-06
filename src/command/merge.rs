@@ -13,11 +13,14 @@ pub fn run(paths: &[PathBuf]) -> Result<()> {
         for line in HistoryLines::new(file) {
             let entry = HistoryEntry::parse(&line?)?;
             let key = entry.start_time;
-            if let Some(entries) = entries_map.get_mut(&key) {
-                entries.push(entry);
-                continue;
+            match entries_map.get_mut(&key) {
+                None => {
+                    entries_map.insert(key, vec![entry]);
+                }
+                Some(entries) => {
+                    entries.push(entry);
+                }
             }
-            entries_map.insert(key, vec![entry]);
         }
     }
 
