@@ -1,21 +1,20 @@
 # zsh-history-utils
 
 ```console
-zsh-history-utils 0.1.0
+$ zsh-history-utils help
 manipulate the history file of zsh
 
-USAGE:
-    zsh-history-utils <SUBCOMMAND>
+Usage: zsh-history-utils <COMMAND>
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
+Commands:
+  decode  Convert a history file to a JSON Lines
+  encode  Convert a JSON Lines to a history file
+  merge   Merge multiple history files into a single history file
+  help    Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    decode    Convert a history file to a JSON Lines
-    encode    Convert a JSON Lines to a history file
-    help      Print this message or the help of the given subcommand(s)
-    merge     Merge multiple history files into a single history file
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## links

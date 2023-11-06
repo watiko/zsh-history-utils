@@ -1,14 +1,13 @@
 use std::path::PathBuf;
 
 pub use clap::Parser;
-use clap::{AppSettings, Subcommand};
+use clap::Subcommand;
 
 #[derive(Parser)]
 #[clap(about = "manipulate the history file of zsh")]
 #[clap(version)]
-#[clap(global_setting(AppSettings::PropagateVersion))]
-#[clap(global_setting(AppSettings::UseLongFormatForHelpSubcommand))]
-#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
+#[clap(propagate_version = true)]
+#[clap(subcommand_required = true, arg_required_else_help = true)]
 pub struct Args {
     #[clap(subcommand)]
     pub command: Commands,
@@ -17,23 +16,23 @@ pub struct Args {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Convert a history file to a JSON Lines
-    #[clap(setting(AppSettings::ArgRequiredElseHelp))]
+    #[clap(arg_required_else_help = true)]
     Decode {
-        #[clap(required = true, parse(from_os_str))]
+        #[clap(required = true, value_parser)]
         path: PathBuf,
     },
 
     /// Convert a JSON Lines to a history file
-    #[clap(setting(AppSettings::ArgRequiredElseHelp))]
+    #[clap(arg_required_else_help = true)]
     Encode {
-        #[clap(required = true, parse(from_os_str))]
+        #[clap(required = true, value_parser)]
         path: PathBuf,
     },
 
     /// Merge multiple history files into a single history file
-    #[clap(setting(AppSettings::ArgRequiredElseHelp))]
+    #[clap(arg_required_else_help = true)]
     Merge {
-        #[clap(required = true, parse(from_os_str))]
+        #[clap(required = true, value_parser)]
         path: Vec<PathBuf>,
     },
 }
