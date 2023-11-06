@@ -21,7 +21,8 @@ pub fn run(paths: &[PathBuf]) -> Result<()> {
         }
     }
 
-    let mut stdout = BufWriter::new(io::stdout());
+    let stdout = io::stdout();
+    let mut stdout = BufWriter::new(stdout.lock());
     for entries in entries_map.values() {
         for entry in entries {
             stdout.write_all(&entry.to_bytes())?;

@@ -8,10 +8,11 @@ use crate::zsh::history::{HistoryEntry, HistoryLines};
 pub fn run(path: &Path) -> Result<()> {
     let file = helper::open(path)?;
 
-    let mut stdout = BufWriter::new(io::stdout());
+    let stdout = io::stdout();
+    let mut stdout = BufWriter::new(stdout.lock());
     for line in HistoryLines::new(file) {
         let entry = HistoryEntry::parse(&line?)?;
-        writeln!(&mut stdout, "{}", serde_json::to_string(&entry)?)?;
+        writeln!(stdout, "{}", serde_json::to_string(&entry)?)?;
     }
 
     Ok(())
