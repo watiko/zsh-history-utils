@@ -266,7 +266,7 @@ mod tests {
       _name, histories, lines,
       case(
         "simple",
-        vec![
+        [
           ": 1639324265:0;echo 1 2 3",
           ": 1639324275:0;echo \"\"",
           ": 1639324281:0;echo {1,2,3}",
@@ -280,7 +280,7 @@ mod tests {
       ),
       case(
         "simple",
-        vec![
+        [
           ": 1639320933:0;echo one \\ ",
           ": 1639322528:0;echo two \\\\ ",
           ": 1639320933:0;echo one \\",

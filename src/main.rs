@@ -1,3 +1,4 @@
+#[allow(clippy::single_component_path_imports)]
 #[cfg(test)]
 use rstest_reuse;
 
