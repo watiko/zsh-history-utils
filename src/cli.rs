@@ -5,7 +5,7 @@ use clap::Subcommand;
 
 #[derive(Parser)]
 #[clap(about = "manipulate the history file of zsh")]
-#[clap(version)]
+#[clap(version = env!("VERSION"))]
 #[clap(propagate_version = true)]
 #[clap(subcommand_required = true, arg_required_else_help = true)]
 pub struct Args {
